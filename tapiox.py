@@ -1,5 +1,4 @@
 #### TO DO
-#### Better comments
 #### Fully flesh out quiet and verbose modes
 
 #Import modules
@@ -11,6 +10,7 @@ import json
 import argparse
 import datetime
 
+#The below code blocks use argparse to define and take in arguments from the command line.
 parser = argparse.ArgumentParser(description='Tapiox is a Python script that extracts hostnames from the computers.json file gathered from Bloodhound collectors and correlates IP addresses to the hostnames. For this script to work, the Bloodhound output results will need to be unzipped. This script generates reports and stores them in the directory this tool is kept in. Quiet mode is the default setting.')
 
 parser.add_argument('-f','--filepath', metavar='', type=str, required=True, help='Path to computers.json file')
@@ -49,6 +49,8 @@ pingList = []
 currentDT = datetime.datetime.now()
 dt_string = currentDT.strftime("%Y%m%d%H%M")
 
+#This function opens the computers.json file and iterates through the keys looking for the "name" subkey under "Properties".
+# The value of name is the hostname. This hostname is appended to hostnameList.
 def jsonHostnameValueExtraction(filepath):
     if args.verbose:
         print('Extracting hostnames from ' + filepath)
@@ -58,6 +60,10 @@ def jsonHostnameValueExtraction(filepath):
             propertyDict = computer['Properties']
             valuesList = list(propertyDict.values())
             hostnameList.append(valuesList[0])
+
+#This function iterates through hostnameList and gets the IP address of each host. If there is a correlating IP,
+# the hostname and IP are appended to hostWithIPList as a tuple and the IP is appended to ipList, if there is no
+# correlating IP address then the hostname is appended to noIPList.
 
 def hostnameToIP():
     if args.verbose:
@@ -74,6 +80,10 @@ def hostnameToIP():
             noIPList.append(hostname)
             if args.verbose:
                 print('No IP found for ' + hostname)
+
+#This function first tests for the operating system and sets the ping paramater based off the OS. Once this is done,
+#it iterates through ipList pinging each host a single time. If a host is up, it is tagged with "UP" and if the host is
+#down, it is tagged with "DOWN". This data is appended to pingList.
 
 def pingTest():
     if args.verbose:
@@ -96,6 +106,10 @@ def pingTest():
             ipStatus = (ip, 'DOWN')
             pingList.append(ipStatus)
 
+#The below function generates reports based off the actions performed. By default, it generates a hostname/IP list
+#as well as a list with just IP addresses. If the -p option is used, it will also generate a report with the status of
+#each host that was pinged.
+
 def generateReports():
     ipFileName = (dt_string + "_IP_list.txt")
     ipFile = open(ipFileName, "a")
@@ -107,10 +121,11 @@ def generateReports():
     for hostWithIP in hostWithIPList:
         hostWithIPFile.write(str(hostWithIP[0]) + ' ' + str(hostWithIP[1]) + '\n')
     hostWithIPFile.close()
-    pingStatusFileName = (dt_string + "_Ping_Status.txt")
-    pingStatusFile = open(pingStatusFileName, "a")
-    for pingStatus in pingList:
-        pingStatusFile.write(str(pingStatus[0]) + ' ' + str(pingStatus[1]) + '\n')
+    if args.ping:
+        pingStatusFileName = (dt_string + "_Ping_Status.txt")
+        pingStatusFile = open(pingStatusFileName, "a")
+        for pingStatus in pingList:
+            pingStatusFile.write(str(pingStatus[0]) + ' ' + str(pingStatus[1]) + '\n')
 
 if __name__ == '__main__':
     jsonHostnameValueExtraction(args.filepath)
