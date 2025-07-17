@@ -87,7 +87,7 @@ def hostnameToIP():
 
 def pingTest():
     if args.verbose:
-        "Starting ping test"
+        print("Starting ping test")
     if opsys == "windows":
         parameter = "-n"
     else:
@@ -126,6 +126,7 @@ def generateReports():
         pingStatusFile = open(pingStatusFileName, "a")
         for pingStatus in pingList:
             pingStatusFile.write(str(pingStatus[0]) + ' ' + str(pingStatus[1]) + '\n')
+        pingStatusFile.close()
 
 if __name__ == '__main__':
     jsonHostnameValueExtraction(args.filepath)
